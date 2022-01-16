@@ -1,5 +1,5 @@
 # mumble-video
-Very, very experimental screensharing plugin in Mumble.
+Very, very experimental screensharing plugin for Mumble.
 
 ## Usage
 Run the RTMP server (needs `docker` and `docker-compose`):
