@@ -81,7 +81,7 @@ void mumble_onServerSynchronized(mumble_connection_t c) {
 }
 
 void streamVideo() {
-	system("ffmpeg -f x11grab -s 1920x1080 -framerate 60 -i :0.0 -c:v libx264 -preset ultrafast -f flv rtmp://localhost:1935/mytv/a");
+	system("ffmpeg -f x11grab -s 1920x1080 -framerate 60 -i :0.0 -c:v libx264 -preset ultrafast -f flv rtmp://127.0.0.1:1935/mytv/a");
 }
 
 void mumble_onKeyEvent(uint32_t keyCode, bool wasPress) {
@@ -138,6 +138,6 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress) {
 
 bool mumble_onReceiveData(mumble_connection_t connection, mumble_userid_t sender, const uint8_t *data, size_t dataLength, const char *dataID) {
 	mumbleAPI.log(ownID, "Starting stream from someone");
-	printf("%i\n", system("ffplay -f flv -fflags nobuffer rtmp://localhost:1935/mytv/a &"));
+	printf("%i\n", system("ffplay -f flv -fflags nobuffer rtmp://127.0.0.1:1935/mytv/a &"));
 	return true;
 }
