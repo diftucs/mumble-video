@@ -8,7 +8,7 @@ cd rtmp-server
 docker-compose up -d
 ```
 
-Then open two clients on the same machine as the RTMP server with the plugin loaded. Connect them to the same server and press `0` in one of them. Check stdout for FFmpeg output.
+Then open two clients on the same machine as the RTMP server with the plugin loaded and enabled with keyevents. Connect them to the same server and press `0` in one of them. Check stdout for FFmpeg output.
 
 ## Compilation
 ```
