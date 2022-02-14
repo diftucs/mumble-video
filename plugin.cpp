@@ -5,7 +5,7 @@
 #include <string.h>
 #include <unistd.h> 
 #include <signal.h> 
-#include<thread>
+#include <thread>
 
 struct MumbleAPI_v_1_0_x mumbleAPI;
 mumble_plugin_id_t ownID;
@@ -84,6 +84,7 @@ void streamVideo() {
 	system("ffmpeg -f x11grab -s 1920x1080 -framerate 60 -i :0.0 -c:v libx264 -preset ultrafast -f flv rtmp://127.0.0.1:1935/mytv/a");
 }
 
+bool isStreaming = false;
 void mumble_onKeyEvent(uint32_t keyCode, bool wasPress) {
 	if(keyCode == MUMBLE_KC_0 && !wasPress) {
 		// Start stream and broadcast RTMP id to peers
@@ -125,10 +126,15 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress) {
 			uint8_t data[2] = "a";
 			char dataID[] = "myid";
 			if(mumbleAPI.sendData(ownID, connection, otherUsers, userCount, data, sizeof(mumble_userid_t)*userCount, dataID) == MUMBLE_EC_OK) {
-				// todo: check if stream is already active
-				std::thread t(streamVideo);
-				t.detach();
-				mumbleAPI.log(ownID, "Screensharing launched");
+				if(isStreaming) {
+					mumbleAPI.log(ownID, "You are already streaming");
+				} else {
+					std::thread t(&streamVideo);
+					t.detach();
+
+					isStreaming = true;
+					mumbleAPI.log(ownID, "Screensharing launched");
+				}
 			}
 		}
 	} else if(keyCode == MUMBLE_KC_9 && !wasPress) {
