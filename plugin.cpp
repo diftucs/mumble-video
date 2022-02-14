@@ -138,7 +138,13 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress) {
 			}
 		}
 	} else if(keyCode == MUMBLE_KC_9 && !wasPress) {
-		//// todo: Kill stream
+		if(isStreaming) {
+			system("pkill ffmpeg");
+			isStreaming = false;
+			mumbleAPI.log(ownID, "Stopped streaming");
+		} else {
+			mumbleAPI.log(ownID, "You are not currently streaming");
+		}
 	}
 }
 
