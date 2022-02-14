@@ -150,6 +150,20 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress) {
 
 bool mumble_onReceiveData(mumble_connection_t connection, mumble_userid_t sender, const uint8_t *data, size_t dataLength, const char *dataID) {
 	mumbleAPI.log(ownID, "Starting stream from someone");
-	printf("%i\n", system("ffplay -f flv -fflags nobuffer rtmp://127.0.0.1:1935/mytv/a &"));
+
+	// Get command parts
+	const char prefix[] = "ffplay -f flv -fflags nobuffer rtmp://127.0.0.1:1935/mytv/a -window_title Mumble\\ screensharing:\\ ";
+	const char *username;
+	mumbleAPI.getUserName(ownID, connection, sender, &username);
+
+	// Merge them
+	const size_t size = sizeof(prefix) + strlen(username);
+	char *cmd = (char *)malloc(size);
+	snprintf(cmd, size, "%s%s", prefix, username);
+
+	// Start receiving stream
+	system(cmd);
+
+	// Signal that the data was used
 	return true;
 }
