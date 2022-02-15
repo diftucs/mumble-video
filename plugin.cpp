@@ -6,12 +6,20 @@
 #include <unistd.h> 
 #include <signal.h> 
 #include <thread>
+#include <iostream>
+#include <fstream>
+#include <nlohmann/json.hpp>
 
 struct MumbleAPI_v_1_0_x mumbleAPI;
 mumble_plugin_id_t ownID;
+nlohmann::json config;
 
 mumble_error_t mumble_init(mumble_plugin_id_t pluginID) {
 	ownID = pluginID;
+
+	std::ifstream ifs("/home/user/.config/mumble-video/config.json");
+	config = nlohmann::json::parse(ifs);
+
 	return MUMBLE_STATUS_OK;
 }
 
@@ -81,7 +89,23 @@ void mumble_onServerSynchronized(mumble_connection_t c) {
 }
 
 void streamVideo() {
-	system("ffmpeg -f x11grab -s 1920x1080 -framerate 60 -i :0.0 -c:v libx264 -preset ultrafast -f flv rtmp://127.0.0.1:1935/mytv/a");
+	// Get self ID
+	mumble_userid_t	selfID;
+	mumbleAPI.getLocalUserID(ownID, connection, &selfID);
+
+	// Get self username
+	const char *selfName;
+	mumbleAPI.getUserName(ownID, connection, selfID, &selfName);
+
+	// Start stream
+	std::string cmd =
+		"ffmpeg -f x11grab -s 1920x1080 -framerate 60 -i :0.0 -c:v libx264 -preset ultrafast -f flv "+
+		config["rtmp_url"].get< std::string >()+
+		"/"+selfName+" &>/dev/null";
+	system(cmd.c_str());
+
+	mumbleAPI.freeMemory(ownID, &selfID);
+	mumbleAPI.freeMemory(ownID, selfName);
 }
 
 bool isStreaming = false;

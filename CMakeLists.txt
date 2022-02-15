@@ -11,6 +11,9 @@ project(MumblePlugin
 
 set(PLUGIN_NAME "video")
 
+# JSON config file
+find_package(nlohmann_json 3.2.0 REQUIRED)
+
 add_library(plugin
 	SHARED
 		plugin.cpp
@@ -19,6 +22,9 @@ add_library(plugin
 target_include_directories(plugin
 	PUBLIC "${CMAKE_SOURCE_DIR}/include/"
 )
+
+# JSON config file
+target_link_libraries(plugin PRIVATE nlohmann_json::nlohmann_json)
 
 # Add suffix for the respective OS
 if (WIN32)
