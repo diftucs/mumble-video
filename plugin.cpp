@@ -160,6 +160,9 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress) {
 					mumbleAPI.log(ownID, "Screensharing launched");
 				}
 			}
+
+			mumbleAPI.freeMemory(ownID, otherUsers);
+			mumbleAPI.freeMemory(ownID, &userCount);
 		}
 	} else if(keyCode == MUMBLE_KC_9 && !wasPress) {
 		if(isStreaming) {
