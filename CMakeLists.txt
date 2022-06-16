@@ -14,6 +14,17 @@ set(PLUGIN_NAME "video")
 # JSON config file
 find_package(nlohmann_json 3.2.0 REQUIRED)
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
+    libavdevice
+    libavfilter
+    libavformat
+    libavcodec
+    libswresample
+    libswscale
+    libavutil
+)
+
 add_library(plugin
 	SHARED
 		plugin.cpp
@@ -24,7 +35,10 @@ target_include_directories(plugin
 )
 
 # JSON config file
-target_link_libraries(plugin PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(
+	plugin PRIVATE nlohmann_json::nlohmann_json
+	PkgConfig::LIBAV
+)
 
 # Add suffix for the respective OS
 if (WIN32)
