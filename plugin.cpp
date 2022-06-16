@@ -97,27 +97,6 @@ void mumble_onServerSynchronized(mumble_connection_t c)
 	connection = c;
 }
 
-void streamVideo()
-{
-	// Get self ID
-	mumble_userid_t selfID;
-	mumbleAPI.getLocalUserID(ownID, connection, &selfID);
-
-	// Get self username
-	const char *selfName;
-	mumbleAPI.getUserName(ownID, connection, selfID, &selfName);
-
-	// Start stream
-	std::string cmd =
-		"ffmpeg -f x11grab -s 1920x1080 -framerate 60 -i :0.0 -c:v libx264 -preset ultrafast -f flv " +
-		config["rtmp_url"].get<std::string>() +
-		"/" + selfName + " &>/dev/null";
-	system(cmd.c_str());
-
-	mumbleAPI.freeMemory(ownID, &selfID);
-	mumbleAPI.freeMemory(ownID, selfName);
-}
-
 bool isStreaming = false;
 void mumble_onKeyEvent(uint32_t keyCode, bool wasPress)
 {
@@ -173,9 +152,6 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress)
 				}
 				else
 				{
-					std::thread t(&streamVideo);
-					t.detach();
-
 					isStreaming = true;
 					mumbleAPI.log(ownID, "Screensharing launched");
 				}
@@ -189,7 +165,6 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress)
 	{
 		if (isStreaming)
 		{
-			system("pkill ffmpeg");
 			isStreaming = false;
 			mumbleAPI.log(ownID, "Stopped streaming");
 		}
@@ -203,19 +178,6 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress)
 bool mumble_onReceiveData(mumble_connection_t connection, mumble_userid_t sender, const uint8_t *data, size_t dataLength, const char *dataID)
 {
 	mumbleAPI.log(ownID, "Starting stream from someone");
-
-	// Get command parts
-	const char prefix[] = "ffplay -f flv -fflags nobuffer rtmp://127.0.0.1:1935/mytv/a -window_title Mumble\\ screensharing:\\ ";
-	const char *username;
-	mumbleAPI.getUserName(ownID, connection, sender, &username);
-
-	// Merge them
-	const size_t size = sizeof(prefix) + strlen(username);
-	char *cmd = (char *)malloc(size);
-	snprintf(cmd, size, "%s%s", prefix, username);
-
-	// Start receiving stream
-	system(cmd);
 
 	// Signal that the data was used
 	return true;
