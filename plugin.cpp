@@ -23,6 +23,7 @@ extern "C"
 struct MumbleAPI_v_1_0_x mumbleAPI;
 mumble_plugin_id_t ownID;
 nlohmann::json config;
+bool isStreaming = false;
 
 mumble_error_t mumble_init(mumble_plugin_id_t pluginID)
 {
@@ -224,6 +225,10 @@ void stream()
 		// Free the packet buffers since they are not reused
 		av_packet_unref(inputPacket);
 		av_packet_unref(outPacket);
+
+		// Check if streaming should stop
+		if (!isStreaming)
+			break;
 	}
 
 	// Write end of stream
@@ -366,7 +371,6 @@ void receive()
 	avformat_free_context(inputFormatContext);
 }
 
-bool isStreaming = false;
 void mumble_onKeyEvent(uint32_t keyCode, bool wasPress)
 {
 	if (keyCode == MUMBLE_KC_0 && !wasPress)
