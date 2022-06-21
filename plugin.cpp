@@ -197,7 +197,7 @@ void stream()
 	// Determine distance between each presentation timestamp
 	// No idea why this is the correct scale
 	int ptsScale = 2 * av_q2d(outputCodecContext->time_base) / av_q2d(outputFormatContext->streams[0]->time_base);
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0;; i++)
 	{
 		// Get packet from input
 		av_read_frame(inputFormatContext, inputPacket);
