@@ -24,7 +24,7 @@ extern "C"
 struct MumbleAPI_v_1_0_x mumbleAPI;
 mumble_plugin_id_t ownID;
 nlohmann::json config;
-Streamer s;
+Streamer streamer;
 
 mumble_error_t mumble_init(mumble_plugin_id_t pluginID)
 {
@@ -280,13 +280,13 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress)
 			char dataID[] = "myid";
 			if (mumbleAPI.sendData(ownID, connection, otherUsers, userCount, data, sizeof(mumble_userid_t) * userCount, dataID) == MUMBLE_EC_OK)
 			{
-				if (s.isStreaming())
+				if (streamer.isStreaming())
 				{
 					mumbleAPI.log(ownID, "You are already streaming");
 				}
 				else
 				{
-					s.start();
+					streamer.start();
 					mumbleAPI.log(ownID, "Screensharing launched");
 				}
 			}
@@ -297,9 +297,9 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress)
 	}
 	else if (keyCode == MUMBLE_KC_9 && !wasPress)
 	{
-		if (s.isStreaming())
+		if (streamer.isStreaming())
 		{
-			s.stop();
+			streamer.stop();
 			mumbleAPI.log(ownID, "Stopped streaming");
 		}
 		else
