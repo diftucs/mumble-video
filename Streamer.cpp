@@ -39,9 +39,6 @@ private:
 
     void stream()
     {
-        // Write output header
-        avformat_write_header(outputFormatContext, &outputHeaderDictionary);
-
         // Determine distance between each presentation timestamp
         // No idea why this is the correct scale
         int ptsScale = 2 * av_q2d(outputCodecContext->time_base) / av_q2d(outputFormatContext->streams[0]->time_base);
@@ -79,9 +76,6 @@ private:
                 break;
             }
         }
-
-        // Write end of stream
-        av_write_trailer(outputFormatContext);
     }
 
 public:
@@ -167,6 +161,9 @@ public:
         outputFrame->height = outputCodecContext->height;
         av_frame_get_buffer(outputFrame, 0);
 
+        // Write output header
+        avformat_write_header(outputFormatContext, &outputHeaderDictionary);
+
         // Start encoding
         isStreaming = true;
         encodingThread = new std::thread(&Streamer::stream, this);
@@ -177,6 +174,9 @@ public:
         // Stop encoding
         isStreaming = false;
         encodingThread->join();
+
+        // Write end of stream
+        av_write_trailer(outputFormatContext);
 
         // Free memory
         sws_freeContext(sws_ctx);
