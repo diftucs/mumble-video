@@ -94,80 +94,85 @@ void mumble_onServerSynchronized(mumble_connection_t c)
 {
 	connection = c;
 }
+void *getOtherUsers(mumble_userid_t **otherUsers, size_t *userCount)
+{
+	// Get self
+	mumble_userid_t selfID;
+	mumbleAPI.getLocalUserID(ownID, connection, &selfID);
+
+	// Get self channel
+	mumble_channelid_t selfChannelID;
+	mumbleAPI.getChannelOfUser(ownID, connection, selfID, &selfChannelID);
+
+	// Get self channel users
+	mumbleAPI.getUsersInChannel(ownID, connection, selfChannelID, otherUsers, userCount);
+
+	// Remove self from otherUsers
+	for (int i = 0; i < *userCount; i++)
+	{
+		if ((*otherUsers)[i] == selfID)
+		{
+			// Found self
+			for (int j = i; j < *userCount - 1; j++)
+			{
+				// Shift nextcoming one back, overwriting self
+				(*otherUsers)[j] = (*otherUsers)[j + 1];
+			}
+
+			// Remove last user (not deallocating though)
+			(*userCount)--;
+			break;
+		}
+	}
+}
 
 void mumble_onKeyEvent(uint32_t keyCode, bool wasPress)
 {
-	if (keyCode == MUMBLE_KC_0 && !wasPress)
+	// Only act if synced to server
+	bool isSynced;
+	mumbleAPI.isConnectionSynchronized(ownID, connection, &isSynced);
+
+	if (isSynced)
 	{
-		// Start stream and broadcast RTMP id to peers
-
-		// Only act if synced to server
-		bool isSynced;
-		mumbleAPI.isConnectionSynchronized(ownID, connection, &isSynced);
-
-		if (isSynced)
+		// Handle stream starting
+		if (keyCode == MUMBLE_KC_0 && !wasPress)
 		{
-			// Get self
-			mumble_userid_t selfID;
-			mumbleAPI.getLocalUserID(ownID, connection, &selfID);
+			if (streamer.isStreaming())
+			{
+				// Start stream and broadcast RTMP id to peers
+				mumbleAPI.log(ownID, "You are already streaming");
+				return;
+			}
 
-			// Get self channel
-			mumble_channelid_t selfChannelID;
-			mumbleAPI.getChannelOfUser(ownID, connection, selfID, &selfChannelID);
+			// Start streaming
+			streamer.start();
 
 			// Get self channel users
 			mumble_userid_t *otherUsers;
 			size_t userCount;
-			mumbleAPI.getUsersInChannel(ownID, connection, selfChannelID, &otherUsers, &userCount);
-
-			// Remove self from otherUsers
-			for (int i = 0; i < userCount; i++)
-			{
-				if (otherUsers[i] == selfID)
-				{
-					// Found self
-					for (int j = i; j < userCount - 1; j++)
-					{
-						// Shift nextcoming one back, overwriting self
-						otherUsers[j] = otherUsers[j + 1];
-					}
-
-					// Remove last user (not deallocating though)
-					userCount--;
-					break;
-				}
-			}
+			getOtherUsers(&otherUsers, &userCount);
 
 			// Send to all other users in channel
-			uint8_t data[2] = "a";
+			uint8_t data[] = "a";
 			char dataID[] = "myid";
-			if (mumbleAPI.sendData(ownID, connection, otherUsers, userCount, data, sizeof(mumble_userid_t) * userCount, dataID) == MUMBLE_EC_OK)
-			{
-				if (streamer.isStreaming())
-				{
-					mumbleAPI.log(ownID, "You are already streaming");
-				}
-				else
-				{
-					streamer.start();
-					mumbleAPI.log(ownID, "Screensharing launched");
-				}
-			}
+			mumbleAPI.sendData(ownID, connection, otherUsers, userCount, data, sizeof(mumble_userid_t) * userCount, dataID);
 
-			mumbleAPI.freeMemory(ownID, otherUsers);
+			mumbleAPI.freeMemory(ownID, &otherUsers);
 			mumbleAPI.freeMemory(ownID, &userCount);
+
+			mumbleAPI.log(ownID, "Screensharing launched");
 		}
-	}
-	else if (keyCode == MUMBLE_KC_9 && !wasPress)
-	{
-		if (streamer.isStreaming())
+		else if (keyCode == MUMBLE_KC_9 && !wasPress)
 		{
-			streamer.stop();
-			mumbleAPI.log(ownID, "Stopped streaming");
-		}
-		else
-		{
-			mumbleAPI.log(ownID, "You are not currently streaming");
+			if (streamer.isStreaming())
+			{
+				streamer.stop();
+				mumbleAPI.log(ownID, "Stopped streaming");
+			}
+			else
+			{
+				mumbleAPI.log(ownID, "You are not currently streaming");
+			}
 		}
 	}
 }
