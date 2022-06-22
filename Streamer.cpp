@@ -23,7 +23,7 @@ extern "C"
 class Streamer
 {
 private:
-    bool isStreaming;
+    bool streamState;
     AVFormatContext *inputFormatContext;
     AVCodecContext *inputCodecContext;
     AVFormatContext *outputFormatContext;
@@ -71,7 +71,7 @@ private:
             av_packet_unref(outPacket);
 
             // Check if streaming should stop
-            if (!isStreaming)
+            if (!isStreaming())
             {
                 break;
             }
@@ -79,6 +79,11 @@ private:
     }
 
 public:
+    bool isStreaming()
+    {
+        return streamState;
+    }
+
     void start()
     {
         // Initialize devices, here used for x11grab
@@ -162,14 +167,14 @@ public:
         avformat_write_header(outputFormatContext, &outputHeaderDictionary);
 
         // Start encoding
-        isStreaming = true;
+        streamState = true;
         encodingThread = new std::thread(&Streamer::stream, this);
     }
 
     void stop()
     {
         // Stop encoding
-        isStreaming = false;
+        streamState = false;
         encodingThread->join();
 
         // Write end of stream
