@@ -1,17 +1,6 @@
 #include "MumblePlugin_v_1_0_x.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <signal.h>
 #include <thread>
-#include <iostream>
-#include <fstream>
-#include <nlohmann/json.hpp>
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_events.h"
-#include "SDL2/SDL_thread.h"
 
 extern "C"
 {
