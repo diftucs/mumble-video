@@ -110,20 +110,17 @@ public:
         outputCodecContext->width = 1920;
         outputCodecContext->height = 1080;
         outputCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;
-        outputCodecContext->time_base = (AVRational){1, 60};
-
-        // Init the output AVStream
-        outputStream = avformat_new_stream(outputFormatContext, NULL);
-        // Apply the output AVCodecContext's codec and packet properties to the output AVStream
-        avcodec_parameters_from_context(outputStream->codecpar, outputCodecContext);
-
-        // Additionally, set properties unique to the encoded data
         // A minimum of 12 frames between each full frame (the rest only describe change)
         outputCodecContext->gop_size = 12;
         // Make a timestamp increment of one correspond to 1/60 of a second
         // During the encoding phase the timestamps are set to increase by one every frame
         // This results in a 60 FPS stream
         outputCodecContext->time_base = (AVRational){1, 60};
+
+        // Init the output AVStream
+        outputStream = avformat_new_stream(outputFormatContext, NULL);
+        // Apply the output AVCodecContext's codec and packet properties to the output AVStream
+        avcodec_parameters_from_context(outputStream->codecpar, outputCodecContext);
 
         // Open the output codec
         avcodec_open2(outputCodecContext, NULL, NULL);
