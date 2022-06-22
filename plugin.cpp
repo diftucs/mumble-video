@@ -153,9 +153,9 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress)
 			getOtherUsers(&otherUsers, &userCount);
 
 			// Send to all other users in channel
-			uint8_t data[] = "a";
-			char dataID[] = "myid";
-			mumbleAPI.sendData(ownID, connection, otherUsers, userCount, data, sizeof(mumble_userid_t) * userCount, dataID);
+			uint8_t data[]{1};
+			char dataID[] = "video-streamstate";
+			mumbleAPI.sendData(ownID, connection, otherUsers, userCount, data, sizeof(uint8_t), dataID);
 
 			mumbleAPI.freeMemory(ownID, &otherUsers);
 			mumbleAPI.freeMemory(ownID, &userCount);
@@ -164,23 +164,49 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress)
 		}
 		else if (keyCode == MUMBLE_KC_9 && !wasPress)
 		{
-			if (streamer.isStreaming())
-			{
-				streamer.stop();
-				mumbleAPI.log(ownID, "Stopped streaming");
-			}
-			else
+			if (!streamer.isStreaming())
 			{
 				mumbleAPI.log(ownID, "You are not currently streaming");
+				return;
 			}
+
+			// Get self channel users
+			mumble_userid_t *otherUsers;
+			size_t userCount;
+			getOtherUsers(&otherUsers, &userCount);
+
+			uint8_t data[]{0};
+			char dataID[] = "video-streamstate";
+			mumbleAPI.sendData(ownID, connection, otherUsers, userCount, data, sizeof(uint8_t), dataID);
+
+			// Stop streaming
+			streamer.stop();
+
+			mumbleAPI.log(ownID, "Stopped streaming");
 		}
 	}
 }
 
 bool mumble_onReceiveData(mumble_connection_t connection, mumble_userid_t sender, const uint8_t *data, size_t dataLength, const char *dataID)
 {
-	mumbleAPI.log(ownID, "Starting stream from someone");
+	if (!strcmp(dataID, "video-streamstate"))
+	{
+		if (dataLength != 1)
+			return true;
 
-	receiver.start();
-	return true;
+		if (data[0] == 1)
+		{
+			mumbleAPI.log(ownID, "Starting receiving stream");
+			receiver.start();
+		}
+		else
+		{
+			mumbleAPI.log(ownID, "Stopping receiving stream");
+			receiver.stop();
+		}
+
+		return true;
+	}
+
+	return false;
 }

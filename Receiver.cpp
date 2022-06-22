@@ -16,6 +16,7 @@ class Receiver
 {
 private:
     std::thread *decodingThread;
+    bool decodingActive;
 
     void display()
     {
@@ -128,9 +129,15 @@ private:
 
             // Free the packet buffers since they are not reused
             av_packet_unref(inputPacket);
+
+            if (!decodingActive)
+                break;
         }
 
         // Free
+        SDL_DestroyTexture(texture);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window); // Also closes the physical window
         sws_freeContext(sws_ctx);
         av_packet_free(&inputPacket);
         av_frame_free(&inputFrame);
@@ -144,6 +151,14 @@ public:
     void start()
     {
         // Start decoding
+        decodingActive = true;
         decodingThread = new std::thread(&Receiver::display, this);
+    }
+
+    void stop()
+    {
+        // Start decoding
+        decodingActive = false;
+        decodingThread->join();
     }
 };
