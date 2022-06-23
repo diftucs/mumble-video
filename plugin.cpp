@@ -145,7 +145,10 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress)
 			}
 
 			// Start streaming
-			streamer.start();
+			mumble_userid_t selfID;
+			mumbleAPI.getLocalUserID(ownID, connection, &selfID);
+			streamer.start(selfID);
+			mumbleAPI.freeMemory(ownID, &selfID);
 
 			// Get self channel users
 			mumble_userid_t *otherUsers;
@@ -197,7 +200,10 @@ bool mumble_onReceiveData(mumble_connection_t connection, mumble_userid_t sender
 		if (data[0] == 1)
 		{
 			mumbleAPI.log(ownID, "Starting receiving stream");
-			receiver.start();
+			mumble_userid_t selfID;
+			mumbleAPI.getLocalUserID(ownID, connection, &selfID);
+			receiver.start(sender);
+			mumbleAPI.freeMemory(ownID, &selfID);
 		}
 		else
 		{

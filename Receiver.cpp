@@ -18,12 +18,16 @@ private:
     std::thread *decodingThread;
     bool decodingActive;
 
-    void display()
+    void display(u_int32_t streamID)
     {
         // Init input AVFormatContext. Will contain the input AVStream
         AVFormatContext *inputFormatContext = avformat_alloc_context();
         // Init input AVStream according to properties read from the input
-        avformat_open_input(&inputFormatContext, "rtmp://localhost/publishlive/livestream", NULL, NULL);
+        char *baseURL = "rtmp://localhost/publishlive/";
+        const size_t size = strlen(baseURL) + sizeof(streamID);
+        char *cmd = (char *)malloc(size);
+        snprintf(cmd, size, "%s%zu", baseURL, streamID);
+        avformat_open_input(&inputFormatContext, cmd, NULL, NULL);
         avformat_find_stream_info(inputFormatContext, NULL); // Will hang waiting for input
 
         // Init an AVCodecContext with the codec needed to decode the input AVStream
@@ -148,11 +152,11 @@ private:
     }
 
 public:
-    void start()
+    void start(u_int32_t streamID)
     {
         // Start decoding
         decodingActive = true;
-        decodingThread = new std::thread(&Receiver::display, this);
+        decodingThread = new std::thread(&Receiver::display, this, streamID);
     }
 
     void stop()

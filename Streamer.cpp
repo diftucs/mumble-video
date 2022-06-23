@@ -73,7 +73,7 @@ public:
         return streamState;
     }
 
-    void start()
+    void start(uint32_t streamID)
     {
         // Initialize devices, here used for x11grab
         avdevice_register_all();
@@ -120,7 +120,11 @@ public:
         avcodec_open2(outputCodecContext, NULL, NULL);
 
         // Open the output stream
-        avio_open(&outputFormatContext->pb, "rtmp://localhost/publishlive/livestream", AVIO_FLAG_WRITE);
+        char *baseURL = "rtmp://localhost/publishlive/";
+        const size_t size = strlen(baseURL) + sizeof(streamID);
+        char *targetURL = (char *)malloc(size);
+        snprintf(targetURL, size, "%s%zu", baseURL, streamID);
+        avio_open(&outputFormatContext->pb, targetURL, AVIO_FLAG_WRITE);
 
         // Disable FLV-specific duration and filesize writing to header when calling av_write_trailer()
         // This should be set for streams since writing to a header that is already sent is impossible
