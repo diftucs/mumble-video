@@ -28,6 +28,8 @@ pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
 add_library(plugin
 	SHARED
 		plugin.cpp
+		Streamer.cpp
+		Receiver.cpp
 )
 
 target_include_directories(plugin

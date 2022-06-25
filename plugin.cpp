@@ -1,6 +1,6 @@
 #include "MumblePlugin_v_1_0_x.h"
-#include "Streamer.cpp"
-#include "Receiver.cpp"
+#include "Streamer.h"
+#include "Receiver.h"
 
 #include <thread>
 #include <fstream>
