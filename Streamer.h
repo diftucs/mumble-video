@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MumblePlugin_v_1_0_x.h"
+#include "StreamHandler.h"
 
 #include <thread>
 
@@ -11,10 +12,11 @@ extern "C"
 #include "libswscale/swscale.h"
 }
 
-class Streamer
+class Streamer : public StreamHandler
 {
+    using StreamHandler::StreamHandler;
+
 private:
-    bool streamState;
     AVFormatContext *inputFormatContext;
     AVCodecContext *inputCodecContext;
     AVFormatContext *outputFormatContext;
@@ -28,10 +30,9 @@ private:
     AVFrame *outputFrame;
     std::thread *encodingThread;
 
-    void stream();
+    void processingLoop();
 
 public:
-    bool isStreaming();
     void start(uint32_t streamID);
     void stop();
 };

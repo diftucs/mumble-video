@@ -10,7 +10,7 @@ extern "C"
 #include "libswscale/swscale.h"
 }
 
-void Streamer::stream()
+void Streamer::processingLoop()
 {
     // Determine distance between each presentation timestamp
     // No idea why this is the correct scale
@@ -44,16 +44,11 @@ void Streamer::stream()
         av_packet_unref(outPacket);
 
         // Check if streaming should stop
-        if (!isStreaming())
+        if (!isActive())
         {
             break;
         }
     }
-}
-
-bool Streamer::isStreaming()
-{
-    return streamState;
 }
 
 void Streamer::start(uint32_t streamID)
@@ -103,10 +98,7 @@ void Streamer::start(uint32_t streamID)
     avcodec_open2(outputCodecContext, NULL, NULL);
 
     // Open the output stream
-    char *baseURL = "rtmp://localhost/publishlive/";
-    const size_t size = strlen(baseURL) + sizeof(streamID);
-    char *targetURL = (char *)malloc(size);
-    snprintf(targetURL, size, "%s%zu", baseURL, streamID);
+    setTargetURL(streamID);
     avio_open(&outputFormatContext->pb, targetURL, AVIO_FLAG_WRITE);
 
     // Disable FLV-specific duration and filesize writing to header when calling av_write_trailer()
@@ -143,14 +135,14 @@ void Streamer::start(uint32_t streamID)
     avformat_write_header(outputFormatContext, &outputHeaderDictionary);
 
     // Start encoding
-    streamState = true;
-    encodingThread = new std::thread(&Streamer::stream, this);
+    active = true;
+    encodingThread = new std::thread(&Streamer::processingLoop, this);
 }
 
 void Streamer::stop()
 {
     // Stop encoding
-    streamState = false;
+    active = false;
     encodingThread->join();
 
     // Write end of stream

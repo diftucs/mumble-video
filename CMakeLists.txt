@@ -30,6 +30,7 @@ add_library(plugin
 		plugin.cpp
 		Streamer.cpp
 		Receiver.cpp
+		StreamHandler.cpp
 )
 
 target_include_directories(plugin

@@ -19,6 +19,9 @@ mumble_error_t mumble_init(mumble_plugin_id_t pluginID)
 	std::ifstream ifs("/home/user/.config/mumble-video/config.json");
 	config = nlohmann::json::parse(ifs);
 
+	streamer = Streamer();
+	receiver = Receiver();
+
 	return MUMBLE_STATUS_OK;
 }
 
@@ -137,7 +140,7 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress)
 		// Handle stream starting
 		if (keyCode == MUMBLE_KC_0 && !wasPress)
 		{
-			if (streamer.isStreaming())
+			if (streamer.isActive())
 			{
 				// Start stream and broadcast RTMP id to peers
 				mumbleAPI.log(ownID, "You are already streaming");
@@ -167,7 +170,7 @@ void mumble_onKeyEvent(uint32_t keyCode, bool wasPress)
 		}
 		else if (keyCode == MUMBLE_KC_9 && !wasPress)
 		{
-			if (!streamer.isStreaming())
+			if (!streamer.isActive())
 			{
 				mumbleAPI.log(ownID, "You are not currently streaming");
 				return;

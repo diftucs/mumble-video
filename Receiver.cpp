@@ -13,16 +13,13 @@ extern "C"
 #include "libswscale/swscale.h"
 }
 
-void Receiver::display(u_int32_t streamID)
+void Receiver::processingLoop(u_int32_t streamID)
 {
     // Init input AVFormatContext. Will contain the input AVStream
     AVFormatContext *inputFormatContext = avformat_alloc_context();
     // Init input AVStream according to properties read from the input
-    char *baseURL = "rtmp://localhost/publishlive/";
-    const size_t size = strlen(baseURL) + sizeof(streamID);
-    char *cmd = (char *)malloc(size);
-    snprintf(cmd, size, "%s%zu", baseURL, streamID);
-    avformat_open_input(&inputFormatContext, cmd, NULL, NULL);
+    setTargetURL(streamID);
+    avformat_open_input(&inputFormatContext, targetURL, NULL, NULL);
     avformat_find_stream_info(inputFormatContext, NULL); // Will hang waiting for input
 
     // Init an AVCodecContext with the codec needed to decode the input AVStream
@@ -150,7 +147,7 @@ void Receiver::start(u_int32_t streamID)
 {
     // Start decoding
     decodingActive = true;
-    decodingThread = new std::thread(&Receiver::display, this, streamID);
+    decodingThread = new std::thread(&Receiver::processingLoop, this, streamID);
 }
 
 void Receiver::stop()
